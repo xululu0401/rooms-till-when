@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三居够住到哪年</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f4f1ea; color: #2b2620; line-height: 1.6; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 20px 14px 40px; }
+  h1 { font-size: 26px; letter-spacing: 1px; }
+  .lead { color: #6b6158; font-size: 14px; margin: 4px 0 14px; }
+  .card { background: #fffdf8; border-radius: 10px; padding: 14px; border: 1px solid #e2d9c8; margin-bottom: 14px; min-width: 0; }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; overflow-wrap: anywhere; }
+  .top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  label { font-size: 12px; color: #7a6f63; display: block; overflow-wrap: anywhere; }
+  input, textarea, select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #cbbfa9; border-radius: 6px; width: 100%; min-width: 0; background: #fff; font-variant-numeric: tabular-nums; }
+  textarea { resize: vertical; min-height: 150px; line-height: 1.55; font-family: ui-monospace, Menlo, "PingFang SC", monospace; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .bad { border-color: #b3412f !important; background: #fff0ec !important; }
+  button { font: inherit; font-size: 13px; padding: 6px 11px; border-radius: 6px; border: 1px solid #7a4b24; background: #7a4b24; color: #fff; cursor: pointer; }
+  button.ghost { background: #fff; color: #7a4b24; }
+  .presets, .dl { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .err { display: none; background: #fff0ec; border: 1px solid #ecb7aa; color: #8e2b1c; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; overflow-wrap: anywhere; }
+  .muted { color: #8b8073; font-size: 12px; }
+  code { font-family: ui-monospace, Menlo, monospace; background: #f1ebdf; padding: 0 4px; border-radius: 3px; font-size: 12px; }
+  #summary { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+  .big { display: flex; gap: 10px; margin: 10px 0 4px; flex-wrap: wrap; }
+  .big div { flex: 1 1 110px; border-radius: 8px; padding: 8px 10px; background: #f3eee4; min-width: 0; }
+  .big b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .big span { font-size: 12px; color: #7a6f63; }
+  .big .warn { background: #fbe6e0; } .big .warn b { color: #a33a26; } .big .good { background: #e6efe3; } .big .good b { color: #3d6b34; }
+  #facts { margin: 8px 0 0 18px; font-size: 14px; } #facts li { margin: 3px 0; overflow-wrap: anywhere; }
+  /* 年份条 */
+  .strip { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+  .yr { flex: 0 0 42px; text-align: center; border-radius: 5px; padding: 3px 0; cursor: pointer; border: 2px solid transparent; font-variant-numeric: tabular-nums; font-size: 11px; color: #5b5147; background: #ece5d8; }
+  .yr b { display: block; font-size: 15px; color: #2b2620; }
+  .yr.short { background: #f2c9bd; } .yr.short b { color: #8e2b1c; }
+  .yr.spare { background: #dfe9d8; }
+  .yr.on { border-color: #2b2620; }
+  /* 沙盘 */
+  #planHead { font-size: 14px; margin: 8px 0; overflow-wrap: anywhere; }
+  .plan { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .room { background: #fffaf0; min-height: 96px; padding: 8px; border: 3px solid #5b4a38; border-radius: 4px; min-width: 0; }
+  .room h3 { font-size: 12px; color: #8b8073; font-weight: 400; overflow-wrap: anywhere; }
+  .room.empty { background: #f1ece2; } .room.empty h3 { color: #a79c8d; }
+  .out { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+  .out .room { border: 2px dashed #b3412f; background: #fff0ec; border-radius: 4px; }
+  .out .room h3 { color: #a33a26; }
+  .tok { display: inline-block; margin: 4px 4px 0 0; padding: 2px 8px; border-radius: 12px; font-size: 13px; background: #e9dfcd; overflow-wrap: anywhere; max-width: 100%; }
+  .tok small { color: #7a6f63; margin-left: 3px; font-size: 11px; }
+  .tok.kid { background: #f6e2b8; } .tok.old { background: #dce4ef; }
+  .tok.ex { background: transparent; border: 1px dashed #b5a894; color: #8b8073; }
+  table.cmp { border-collapse: collapse; font-size: 13px; width: 100%; font-variant-numeric: tabular-nums; }
+  table.cmp th, table.cmp td { padding: 5px 6px; border-bottom: 1px solid #ebe3d4; text-align: right; }
+  table.cmp th:first-child, table.cmp td:first-child { text-align: left; }
+  table.cmp tr.me td { font-weight: 700; }
+  #sugs { display: grid; gap: 8px; }
+  .sug { display: flex; gap: 10px; align-items: center; justify-content: space-between; border: 1px solid #e6ddcc; border-radius: 6px; padding: 8px 10px; }
+  .sug span { min-width: 0; overflow-wrap: anywhere; font-size: 14px; } .sug button { flex: none; }
+  .how { font-size: 13px; } .how p { margin: 6px 0; }
+  .legend { display: flex; gap: 10px; font-size: 12px; color: #7a6f63; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -2px; margin-right: 4px; }
+  @media (max-width: 760px) { .top { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 480px) { .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sug { flex-direction: column; align-items: stretch; } #summary { font-size: 16px; } .big b { font-size: 20px; } .plan, .out { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>三居够住到哪年</h1>
+  <p class="lead">买房、换房前先算一笔：孩子会长大，老人可能来住几年，大的会去上大学。把家里每个人什么时候住进来、什么时候搬走写下来，这里一年一年排卧室，告诉你这套房<b>从哪年开始挤不下</b>、挤几年、差几间，换成几居才够。默认例子是虚构的。</p>
+
+  <div class="top">
+    <div class="card">
+      <h2>家里有谁</h2>
+      <label for="people">每行一人：名字 性别 出生年 住进年 搬出年 同屋组（住进/搬出不限写 -，同屋组可不写）</label>
+      <textarea id="people" maxlength="800" spellcheck="false"></textarea>
+      <p class="muted" style="margin-top:4px">例：<code>外婆 女 1965 2025 2030</code> = 外婆 2025 年来、2030 年回去（住到 2029 年）。夫妻同屋组写 <code>主卧</code>，小孩不到下面的岁数会跟主卧睡；别的组名（如 <code>老人房</code>）同组的人住一间。</p>
+      <div class="grid4">
+        <div><label for="rooms">房子几间卧室</label><input id="rooms" inputmode="numeric" maxlength="2"></div>
+        <div><label for="from">从哪年看</label><input id="from" inputmode="numeric" maxlength="4"></div>
+        <div><label for="span">往后看几年</label><input id="span" inputmode="numeric" maxlength="2"></div>
+        <div><label for="extra">另留书房/客房</label><input id="extra" inputmode="numeric" maxlength="1"></div>
+        <div><label for="withParents">跟爸妈睡到几岁</label><input id="withParents" inputmode="numeric" maxlength="2"></div>
+        <div><label for="mixedUntil">异性孩子同屋到几岁</label><input id="mixedUntil" inputmode="numeric" maxlength="2"></div>
+        <div><label for="sameUntil">同性孩子同屋到几岁</label><input id="sameUntil" inputmode="numeric" maxlength="2"></div>
+        <div><label for="adultAge">几岁起单住</label><input id="adultAge" inputmode="numeric" maxlength="2"></div>
+      </div>
+      <p class="muted" style="margin-top:6px">「到几岁」都不含那一岁：同性到 18 = 两个孩子都不到 18 岁才合住。年龄按「这一年 − 出生年」算。</p>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div>
+      <div class="err" id="error"></div>
+      <div class="card" id="out">
+        <div id="summary"></div>
+        <div class="big" id="big"></div>
+        <ul id="facts"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="out2">
+    <div class="card">
+      <h2>那一年家里怎么住（点年份换一年）</h2>
+      <div class="strip" id="strip"></div>
+      <div class="legend"><span><i style="background:#f2c9bd"></i>不够住</span><span><i style="background:#ece5d8"></i>正好</span><span><i style="background:#dfe9d8"></i>有空房</span><span>格子里的数 = 这一年要几间</span></div>
+      <div id="planHead"></div>
+      <div class="plan" id="plan"></div>
+      <div class="out" id="outside"></div>
+    </div>
+    <div class="card">
+      <h2>换成几居，各差几年</h2>
+      <table class="cmp" id="cmp"></table>
+    </div>
+    <div class="card" id="sugCard">
+      <h2>改一个条件（点一下代回重算）</h2>
+      <div id="sugs"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>带走结果</h2>
+    <div class="dl">
+      <button id="dlCSV">CSV 逐年表</button><button id="dlMD">Markdown 清单</button><button id="dlPNG">结果卡 PNG</button><button id="dlJSON" class="ghost">JSON 备份</button>
+      <button id="reset" class="ghost">恢复默认</button>
+    </div>
+    <p class="muted" style="margin-top:6px">输入自动保存在这台设备的浏览器里，刷新还在。结果卡画的是上面选中的那一年。</p>
+  </div>
+
+  <div class="card how">
+    <h2>怎么算的</h2>
+    <p><b>谁在家</b>：这一年已经出生、到了住进年、还没到搬出年的人。</p>
+    <p><b>一年要几间</b>：同一个同屋组的人住一间；不到「跟爸妈睡」岁数的小孩睡主卧；其他没成年的孩子两人一间可以合住（同性都不到同性岁数，或者都不到异性岁数），一间最多两个孩子，能配成几对就配几对（把所有配法都试一遍，取配得最多的）；成年人每人一间；最后加上要留的书房/客房。</p>
+    <p><b>挤不下</b>：要的间数比房子的卧室多。换成几居那张表，是同一家人、同一套规则，只改卧室数再数一遍。</p>
+    <p class="muted">规则是你家自己定的，不是什么标准。只数卧室间数，不看面积、朝向、户型形状、学区和价格；不分生日前后。默认例子是虚构的。</p>
+  </div>
+</div>
+
+  <script>
+/* 三居够住到哪年 · 计算核心
+ * 一家人一年一年地变：孩子出生、长大、上大学搬走，老人来帮忙带几年再回去。
+ * 输入：家里每个人（名字 性别 出生年 住进年 搬出年 同屋组），同屋规则，房子几间卧室，看哪些年。
+ * 每一年：先看谁在家（住进 ≤ 这年 < 搬出，且已出生），再按规则最少要几间卧室：
+ *   - 同屋组：同一组名的人住一间（比如夫妻写「主卧」，爷爷奶奶写「老人房」）；
+ *   - 小孩不到「跟爸妈睡到几岁」，睡「主卧」那间（家里那年有「主卧」组才行，否则当普通孩子）；
+ *   - 其他孩子（不到成年岁数）两人一间可以合住：同性都不到「同性同屋到几岁」，或都不到「异性同屋到几岁」；
+ *     一间最多 2 个孩子。合住配对取最多（穷举配对，精确），孩子房 = 孩子数 − 配对数；
+ *   - 成年人（不在同屋组里）每人一间；
+ *   - 再加上「另外要留几间」（书房、客房）。
+ * 年龄 = 这一年 − 出生年（按年算，不分生日前后）。
+ * 不做：面积、户型形状、学区、房价与贷款、真实人口数据；规则是你家自己定的，不是标准。默认例子是虚构的。 */
+(function (root) {
+  'use strict';
+  function Bad(message, field) { const e = new Error(message); e.field = field; return e; }
+  const KEYS = ['people', 'rooms', 'from', 'span', 'withParents', 'mixedUntil', 'sameUntil', 'adultAge', 'extra'];
+  const NAME = /^(?![\d.]+$)[^\s，,；;、]{1,8}$/;
+  const GROUP = /^[^\s，,；;、]{1,6}$/;
+  const MASTER = '主卧';
+
+  /* ── 输入 ── */
+  function int(inp, k, lo, hi, label) {
+    const s = String(inp[k] == null ? '' : inp[k]).trim();
+    if (!/^\d{1,4}$/.test(s)) throw Bad(label + '要填 ' + lo + ' 到 ' + hi + ' 的整数', k);
+    const v = +s;
+    if (v < lo || v > hi) throw Bad(label + '要在 ' + lo + ' 到 ' + hi + ' 之间（现在 ' + v + '）', k);
+    return v;
+  }
+  function yearOrDash(t, row, nm, what) {
+    if (t === '-' || t === '—' || t === '无') return null;
+    if (!/^\d{4}$/.test(t)) throw Bad('第 ' + row + ' 行（' + nm + '）的' + what + '「' + t.slice(0, 8) + '」要写四位年份，不限就写 -', 'people');
+    const v = +t;
+    if (v < 1900 || v > 2200) throw Bad('第 ' + row + ' 行（' + nm + '）的' + what + ' ' + v + ' 不在 1900 到 2200 之间', 'people');
+    return v;
+  }
+  function parse(inp) {
+    const rooms = int(inp, 'rooms', 1, 8, '房子有几间卧室');
+    const from = int(inp, 'from', 1950, 2150, '从哪年开始看');
+    const span = int(inp, 'span', 1, 40, '往后看几年');
+    const withParents = int(inp, 'withParents', 0, 18, '跟爸妈睡到几岁');
+    const mixedUntil = int(inp, 'mixedUntil', 0, 30, '异性孩子同屋到几岁');
+    const sameUntil = int(inp, 'sameUntil', 0, 30, '同性孩子同屋到几岁');
+    const adultAge = int(inp, 'adultAge', 10, 30, '几岁算成年');
+    const extra = int(inp, 'extra', 0, 5, '另外要留几间');
+    const lines = String(inp.people == null ? '' : inp.people).split('\n').map((x) => x.replace(/[，,；;、\t]/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    if (lines.length && /^名字/.test(lines[0])) lines.shift();
+    if (!lines.length) throw Bad('家里的人一个都没写：每行写「名字 性别 出生年 住进年 搬出年 同屋组」', 'people');
+    if (lines.length > 10) throw Bad('最多写 10 个人（现在 ' + lines.length + ' 个）', 'people');
+    const ps = [];
+    lines.forEach((ln, i) => {
+      const t = ln.split(' '), row = i + 1;
+      const nm = t[0];
+      if (!NAME.test(nm)) throw Bad('第 ' + row + ' 行开头的名字「' + nm.slice(0, 10) + '」不行：1 到 8 个字，不能光是数字', 'people');
+      if (ps.some((p) => p.name === nm)) throw Bad('有两个人都叫「' + nm + '」，改个名字区分', 'people');
+      if (t.length < 3 || t.length > 6) throw Bad('第 ' + row + ' 行（' + nm + '）要写「名字 性别 出生年」，后面可选「住进年 搬出年 同屋组」（现在 ' + t.length + ' 项）', 'people');
+      const g = t[1];
+      if (g !== '男' && g !== '女') throw Bad('第 ' + row + ' 行（' + nm + '）的性别写「男」或「女」（现在「' + g.slice(0, 6) + '」）', 'people');
+      if (!/^\d{4}$/.test(t[2])) throw Bad('第 ' + row + ' 行（' + nm + '）的出生年「' + t[2].slice(0, 8) + '」要写四位年份', 'people');
+      const birth = +t[2];
+      if (birth < 1900 || birth > 2200) throw Bad('第 ' + row + ' 行（' + nm + '）的出生年 ' + birth + ' 不在 1900 到 2200 之间', 'people');
+      const inY = t.length > 3 ? yearOrDash(t[3], row, nm, '住进年') : null;
+      const outY = t.length > 4 ? yearOrDash(t[4], row, nm, '搬出年') : null;
+      if (inY != null && inY < birth) throw Bad('第 ' + row + ' 行（' + nm + '）住进年 ' + inY + ' 早于出生年 ' + birth, 'people');
+      if (outY != null && outY <= Math.max(birth, inY == null ? birth : inY)) throw Bad('第 ' + row + ' 行（' + nm + '）搬出年 ' + outY + ' 要晚于' + (inY != null && inY > birth ? '住进年 ' + inY : '出生年 ' + birth), 'people');
+      let group = null;
+      if (t.length > 5) {
+        if (t[5] !== '-' && t[5] !== '—') {
+          if (!GROUP.test(t[5])) throw Bad('第 ' + row + ' 行（' + nm + '）的同屋组「' + t[5].slice(0, 8) + '」要 1 到 6 个字', 'people');
+          group = t[5];
+        }
+      }
+      ps.push({ name: nm, male: g === '男', birth, inY, outY, group });
+    });
+    const gc = {};
+    ps.forEach((p) => { if (p.group) gc[p.group] = (gc[p.group] || 0) + 1; });
+    Object.keys(gc).forEach((g) => { if (gc[g] > 4) throw Bad('同屋组「' + g + '」有 ' + gc[g] + ' 个人，一间最多写 4 个', 'people'); });
+    return { ps, rooms, from, span, withParents, mixedUntil, sameUntil, adultAge, extra };
+  }
+
+  /* ── 一年 ── */
+  const present = (p, y) => y >= p.birth && (p.inY == null || y >= p.inY) && (p.outY == null || y < p.outY);
+  function canShare(P, a, b, y) {
+    const x = y - a.birth, z = y - b.birth;
+    if (a.male === b.male && x < P.sameUntil && z < P.sameUntil) return true;
+    return x < P.mixedUntil && z < P.mixedUntil;
+  }
+  /* 最多配几对（一般图最大匹配，孩子 ≤ 10 人，递归穷举精确） */
+  function bestPairs(P, kids, y) {
+    let best = [];
+    function go(rest, cur) {
+      if (cur.length + Math.floor(rest.length / 2) <= best.length) return;
+      if (rest.length < 2) { if (cur.length > best.length) best = cur.slice(); return; }
+      const [h, ...t] = rest;
+      for (let k = 0; k < t.length; k++) {
+        if (canShare(P, h, t[k], y)) { cur.push([h, t[k]]); go(t.slice(0, k).concat(t.slice(k + 1)), cur); cur.pop(); }
+      }
+      go(t, cur);
+    }
+    go(kids, []);
+    return best;
+  }
+  function year(P, y) {
+    const here = P.ps.filter((p) => present(p, y));
+    const groups = {};
+    here.forEach((p) => { if (p.group) (groups[p.group] = groups[p.group] || []).push(p); });
+    const hasMaster = !!groups[MASTER];
+    const rooms = Object.keys(groups).map((g) => ({ label: g, kind: 'group', people: groups[g].map((p) => p.name) }));
+    const kids = [], adults = [];
+    here.filter((p) => !p.group).forEach((p) => {
+      const age = y - p.birth;
+      if (age >= P.adultAge) adults.push(p);
+      else if (hasMaster && age < P.withParents) rooms.find((r) => r.label === MASTER).people.push(p.name);
+      else kids.push(p);
+    });
+    const pairs = bestPairs(P, kids, y);
+    const paired = new Set([].concat.apply([], pairs).map((p) => p.name));
+    pairs.forEach((pr) => rooms.push({ label: '孩子房', kind: 'kids', people: pr.map((p) => p.name) }));
+    kids.filter((p) => !paired.has(p.name)).forEach((p) => rooms.push({ label: '孩子房', kind: 'kid', people: [p.name] }));
+    adults.forEach((p) => rooms.push({ label: '单间', kind: 'adult', people: [p.name] }));
+    for (let k = 0; k < P.extra; k++) rooms.push({ label: '书房/客房', kind: 'extra', people: [] });
+    return { y, here: here.map((p) => p.name), ages: here.map((p) => y - p.birth), need: rooms.length, rooms, kids: kids.length, pairs: pairs.length, short: Math.max(0, rooms.length - P.rooms), spare: Math.max(0, P.rooms - rooms.length) };
+  }
+
+  /* ── 连续年份并成一段 ── */
+  function ranges(ys) {
+    const out = [];
+    ys.forEach((y) => { const l = out[out.length - 1]; if (l && l[1] === y - 1) l[1] = y; else out.push([y, y]); });
+    return out;
+  }
+  const rtext = (rs) => rs.map((r) => (r[0] === r[1] ? r[0] + ' 年' : r[0] + '–' + r[1] + ' 年')).join('、');
+  const CN = ['零', '一', '两', '三', '四', '五', '六', '七', '八'];
+  const ju = (n) => (CN[n] || n) + '居';
+
+  function brief(x) { /* 留的空房合成一项，免得一串「书房/客房」 */
+    const ex = x.rooms.filter((r) => r.kind === 'extra').length;
+    return x.rooms.filter((r) => r.kind !== 'extra').map((r) => r.people.join('+')).concat(ex ? ['书房/客房' + (ex > 1 ? ' ×' + ex : '')] : []).join('｜');
+  }
+  function calculate(inp) {
+    const P = parse(inp);
+    const Y = [];
+    for (let k = 0; k < P.span; k++) Y.push(year(P, P.from + k));
+    const shortYs = Y.filter((x) => x.short > 0);
+    const maxNeed = Math.max.apply(null, Y.map((x) => x.need));
+    const peak = Y.find((x) => x.need === maxNeed);
+    const last = P.from + P.span - 1;
+    const cmp = [];
+    for (let n = Math.max(1, Math.min(P.rooms, maxNeed) - 1); n <= Math.max(P.rooms, maxNeed) + 1 && cmp.length < 5; n++) {
+      const s = Y.filter((x) => x.need > n);
+      cmp.push({ n, shortYears: s.length, firstShort: s.length ? s[0].y : null, maxShort: s.length ? Math.max.apply(null, s.map((x) => x.need - n)) : 0, spareYears: Y.filter((x) => x.need < n).length });
+    }
+    const minFit = maxNeed;
+    let summary;
+    if (!shortYs.length) {
+      summary = ju(P.rooms) + '在 ' + P.from + '–' + last + ' 年一直够住：最挤的 ' + peak.y + ' 年要 ' + maxNeed + ' 间' + (maxNeed < P.rooms ? '，还空 ' + (P.rooms - maxNeed) + ' 间' : '，正好住满') + '。';
+    } else {
+      const rs = ranges(shortYs.map((x) => x.y));
+      const worst = shortYs.reduce((a, b) => (b.short > a.short ? b : a));
+      summary = ju(P.rooms) + '从 ' + shortYs[0].y + ' 年开始挤不下：' + P.from + '–' + last + ' 年里有 ' + shortYs.length + ' 年不够住（' + rtext(rs) + '），最多差 ' + worst.short + ' 间（' + worst.y + ' 年要 ' + worst.need + ' 间）。';
+    }
+    const facts = [];
+    const runs = [];
+    Y.forEach((x) => { const l = runs[runs.length - 1]; if (l && l.need === x.need) l.to = x.y; else runs.push({ from: x.y, to: x.y, need: x.need }); });
+    facts.push('每年要几间：' + runs.map((r) => (r.from === r.to ? r.from : r.from + '–' + r.to) + ' 年 ' + r.need + ' 间').join('，') + '。');
+    if (shortYs.length) {
+      const f = shortYs[0];
+      facts.push(f.y + ' 年为什么不够：' + brief(f) + '，共 ' + f.need + ' 间，房子只有 ' + P.rooms + ' 间。');
+    } else {
+      facts.push(peak.y + ' 年最挤：' + brief(peak) + '。');
+    }
+    facts.push('换个居室数比：' + cmp.map((c) => ju(c.n) + (c.shortYears ? ' ' + c.shortYears + ' 年不够' : '都够')).join('，') + '；要整段都够住至少 ' + minFit + ' 间。');
+    const tail = Y[Y.length - 1];
+    facts.push(last + ' 年家里 ' + tail.here.length + ' 个人，要 ' + tail.need + ' 间' + (tail.spare ? '，' + ju(P.rooms) + '空 ' + tail.spare + ' 间' : '') + '。');
+    facts.push('规则：小孩跟爸妈睡到 ' + P.withParents + ' 岁（不含），同性孩子同屋到 ' + P.sameUntil + ' 岁、异性到 ' + P.mixedUntil + ' 岁，' + P.adultAge + ' 岁起单住' + (P.extra ? '，另留 ' + P.extra + ' 间书房/客房' : '') + '。');
+    return { P, Y, shortYs, maxNeed, peak, cmp, last, summary, facts, minFit };
+  }
+
+  /* ── 建议：改输入，代回重算 ── */
+  function peopleText(P, ps) {
+    return ps.map((p) => [p.name, p.male ? '男' : '女', p.birth, p.inY == null ? '-' : p.inY, p.outY == null ? '-' : p.outY].concat(p.group ? [p.group] : []).join(' ')).join('\n');
+  }
+  function suggestions(inp, R) {
+    const out = [], P = R.P;
+    const withI = (o) => Object.assign({}, inp, o);
+    const push = (id, patch, lead) => {
+      if (out.length >= 4) return;
+      let r2; try { r2 = calculate(withI(patch)); } catch (e) { return; }
+      if (R.shortYs.length && id !== 'more' && r2.shortYs.length >= R.shortYs.length) return; /* 没帮上忙的不列 */
+      out.push({ id, text: lead + '：' + (r2.shortYs.length ? '还有 ' + r2.shortYs.length + ' 年不够' : '每年都够') + '（最多要 ' + r2.maxNeed + ' 间）', apply: withI(patch), shortYears: r2.shortYs.length });
+    };
+    if (!R.shortYs.length) {
+      if (R.maxNeed < P.rooms) push('fewer', { rooms: String(R.maxNeed) }, '换成' + ju(R.maxNeed) + '（少一间以上）');
+      push('fewer1', { rooms: String(Math.max(1, P.rooms - 1)) }, '少一间，换成' + ju(Math.max(1, P.rooms - 1)));
+      if (P.extra < 5) push('study', { extra: String(P.extra + 1) }, '再留一间书房/客房（另外 ' + P.extra + ' → ' + (P.extra + 1) + ' 间）');
+      return out.filter((s, i, a) => a.findIndex((t) => t.apply.rooms === s.apply.rooms && t.apply.extra === s.apply.extra) === i);
+    }
+    push('more', { rooms: String(Math.min(8, P.rooms + 1)) }, '多一间，换成' + ju(Math.min(8, P.rooms + 1)));
+    const f = R.shortYs[0];
+    /* 第一个不够住那年在家、有搬出年的单住大人：早点搬出 */
+    const mover = P.ps.find((p) => !p.group && present(p, f.y) && f.y - p.birth >= P.adultAge && p.outY != null && (p.inY == null || p.inY < f.y));
+    if (mover) {
+      const ps2 = P.ps.map((p) => (p === mover ? Object.assign({}, p, { outY: f.y }) : p));
+      push('leave', { people: peopleText(P, ps2) }, mover.name + ' ' + f.y + ' 年起不住（原来住到 ' + (mover.outY - 1) + ' 年）');
+    }
+    if (P.mixedUntil < 30) push('mixed', { mixedUntil: String(Math.min(30, P.mixedUntil + 2)) }, '异性孩子同屋多两年（到 ' + P.mixedUntil + ' → ' + Math.min(30, P.mixedUntil + 2) + ' 岁）');
+    if (P.withParents < 18) push('parents', { withParents: String(Math.min(18, P.withParents + 2)) }, '小的跟爸妈多睡两年（到 ' + P.withParents + ' → ' + Math.min(18, P.withParents + 2) + ' 岁）');
+    if (P.extra > 0) push('noextra', { extra: '0' }, '不留书房/客房（' + P.extra + ' → 0 间）');
+    return out;
+  }
+
+  /* ── 导出 ── */
+  function csvCell(v) { const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  const roomText = (x) => x.rooms.map((r) => (r.people.length ? r.people.join('+') : r.label)).join(' | ');
+  function toCSV(R, stamp) {
+    const P = R.P, L = [['三居够住到哪年', '生成于 ' + stamp], ['结论', R.summary], ['房子', P.rooms + ' 间卧室'], []];
+    L.push(['年份', '在家的人（年龄）', '要几间', '差几间', '空几间', '怎么住']);
+    R.Y.forEach((x) => L.push([x.y, x.here.map((n, i) => n + '(' + x.ages[i] + ')').join(' '), x.need, x.short, x.spare, roomText(x)]));
+    L.push([], ['居室数', '不够住的年数', '第一个不够的年份', '最多差几间']);
+    R.cmp.forEach((c) => L.push([c.n, c.shortYears, c.firstShort == null ? '' : c.firstShort, c.maxShort]));
+    L.push([], ['序号', '说明']); R.facts.forEach((x, i) => L.push([i + 1, x]));
+    return L.map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
+  }
+  function toMD(R, stamp, sg) {
+    const P = R.P, o = [];
+    o.push('# 三居够住到哪年', '', '生成时间：' + stamp + '　默认例子是虚构的', '', '**' + R.summary + '**', '');
+    R.facts.forEach((x) => o.push('- ' + x));
+    o.push('', '## 一年一年', '', '| 年份 | 在家 | 要几间 | 差几间 | 怎么住 |', '|---|---|---|---|---|');
+    R.Y.forEach((x) => o.push('| ' + x.y + ' | ' + x.here.map((n, i) => n + ' ' + x.ages[i] + ' 岁').join('、') + ' | ' + x.need + ' | ' + (x.short || '') + ' | ' + roomText(x) + ' |'));
+    o.push('', '## 换个居室数', '', '| 居室 | 不够住的年数 | 第一个不够的年份 |', '|---|---|---|');
+    R.cmp.forEach((c) => o.push('| ' + ju(c.n) + ' | ' + c.shortYears + ' | ' + (c.firstShort == null ? '—' : c.firstShort) + ' |'));
+    if (sg && sg.length) { o.push('', '## 改一个条件'); sg.forEach((s) => o.push('- ' + s.text)); }
+    o.push('', '## 前提', '', '- 同屋规则是你家自己定的，不是标准；年龄按年份相减，不分生日前后。', '- 只数卧室间数，不看面积、朝向、户型形状。');
+    return o.join('\n') + '\n';
+  }
+
+  const DEFAULT = {
+    people: '名字 性别 出生年 住进 搬出 同屋组\n我 男 1992 - - 主卧\n老婆 女 1993 - - 主卧\n大宝 男 2020 - 2038\n二宝 女 2025 - 2043\n外婆 女 1965 2025 2030',
+    rooms: '3', from: '2026', span: '20', withParents: '3', mixedUntil: '8', sameUntil: '18', adultAge: '18', extra: '0',
+  };
+  const PRESETS = [
+    ['默认：外婆来带二宝', DEFAULT],
+    ['再要个三宝', Object.assign({}, DEFAULT, { people: DEFAULT.people + '\n三宝 男 2028 - 2046' })],
+    ['在家办公留书房', Object.assign({}, DEFAULT, { extra: '1' })],
+    ['两口子一个娃', { people: '名字 性别 出生年 住进 搬出 同屋组\n我 女 1995 - - 主卧\n他 男 1994 - - 主卧\n娃 女 2027 - 2045', rooms: '2', from: '2026', span: '25', withParents: '3', mixedUntil: '8', sameUntil: '18', adultAge: '18', extra: '0' }],
+    ['爷爷奶奶长住', Object.assign({}, DEFAULT, { people: DEFAULT.people.replace('\n外婆 女 1965 2025 2030', '\n爷爷 男 1960 2026 - 老人房\n奶奶 女 1962 2026 - 老人房') })],
+  ];
+
+  const api = { DEFAULT, PRESETS, KEYS, MASTER, parse, year, present, canShare, bestPairs, calculate, suggestions, peopleText, ranges, rtext, ju, toCSV, toMD, roomText };
+  if (typeof module === 'object' && module.exports) module.exports = api; else root.AppCore = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+  </script>
+  <script>
+/* 三居够住到哪年 · 界面层 */
+(function () {
+  'use strict';
+  const C = window.AppCore;
+  const KEY = 'rooms-till-when:v1';
+  const NAME = '三居够住到哪年';
+  const copy = (o) => JSON.parse(JSON.stringify(o));
+  const DEFAULT = C.DEFAULT, PRESETS = C.PRESETS, KEYS = C.KEYS;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let state = copy(DEFAULT);
+  let last = null, selY = null;
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 隐私模式忽略 */ } }
+  function load() {
+    try {
+      const o = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+      const s = {};
+      for (const k of KEYS) { if (o[k] == null || typeof o[k] === 'object') return null; s[k] = String(o[k]).slice(0, 800); }
+      return s;
+    } catch (e) { return null; }
+  }
+  function fill() { KEYS.forEach((k) => { $(k).value = state[k]; }); }
+  function defaultYear(R) { return R.shortYs.length ? R.shortYs[0].y : R.peak.y; }
+
+  function renderBig(R) {
+    const P = R.P, s = R.shortYs;
+    $('big').innerHTML =
+      '<div class="' + (s.length ? 'warn' : 'good') + '"><b>' + (s.length ? s[0].y + ' 年' : '都够') + '</b><span>' + (s.length ? '从这年开始挤不下' : P.from + '–' + R.last + ' 年') + '</span></div>' +
+      '<div><b>' + s.length + ' 年</b><span>' + P.span + ' 年里不够住的年数</span></div>' +
+      '<div><b>' + R.minFit + ' 间</b><span>整段都够住至少要几间</span></div>';
+  }
+  function renderStrip(R) {
+    $('strip').innerHTML = R.Y.map((x) => '<div class="yr' + (x.short ? ' short' : x.spare ? ' spare' : '') + (x.y === selY ? ' on' : '') + '" data-y="' + x.y + '"><b>' + x.need + '</b>' + x.y + '</div>').join('');
+    [].forEach.call($('strip').querySelectorAll('.yr'), (d) => d.addEventListener('click', () => { selY = +d.dataset.y; renderStrip(last.r); renderPlan(last.r); }));
+    const on = $('strip').querySelector('.yr.on'); if (on && on.scrollIntoView && $('strip').scrollWidth > $('strip').clientWidth) $('strip').scrollLeft = Math.max(0, on.offsetLeft - $('strip').offsetLeft - 60);
+  }
+  function tok(R, x, n) {
+    const P = R.P, p = P.ps.find((q) => q.name === n), age = x.y - p.birth;
+    const cls = age < P.adultAge ? ' kid' : age >= 60 ? ' old' : '';
+    return '<span class="tok' + cls + '">' + esc(n) + '<small>' + age + ' 岁</small></span>';
+  }
+  function roomHTML(R, x, r) {
+    const title = r.kind === 'group' ? r.label : r.kind === 'kids' ? '孩子合住' : r.kind === 'kid' ? '孩子单住' : r.kind === 'adult' ? '单间' : '书房/客房';
+    return '<div class="room' + (r.kind === 'extra' ? ' empty' : '') + '"><h3>' + esc(title) + '</h3>' + (r.people.length ? r.people.map((n) => tok(R, x, n)).join('') : '<span class="tok ex">留着</span>') + '</div>';
+  }
+  function renderPlan(R) {
+    const P = R.P, x = R.Y.find((v) => v.y === selY);
+    $('planHead').innerHTML = '<b>' + x.y + ' 年</b>：家里 ' + x.here.length + ' 个人，要 <b>' + x.need + '</b> 间，房子 ' + P.rooms + ' 间' + (x.short ? '，<b style="color:#a33a26">差 ' + x.short + ' 间</b>（虚线框是放不进去的）' : x.spare ? '，空 ' + x.spare + ' 间' : '，正好住满');
+    const inRooms = x.rooms.slice(0, P.rooms), outRooms = x.rooms.slice(P.rooms);
+    let h = inRooms.map((r) => roomHTML(R, x, r)).join('');
+    for (let k = 0; k < x.spare; k++) h += '<div class="room empty"><h3>空房</h3></div>';
+    $('plan').innerHTML = h;
+    $('outside').innerHTML = outRooms.map((r) => roomHTML(R, x, r)).join('');
+  }
+  function renderCmp(R) {
+    $('cmp').innerHTML = '<tr><th>居室</th><th>不够住的年数</th><th>第一个不够的年份</th><th>最多差几间</th><th>有空房的年数</th></tr>' +
+      R.cmp.map((c) => '<tr' + (c.n === R.P.rooms ? ' class="me"' : '') + '><td>' + C.ju(c.n) + (c.n === R.P.rooms ? '（你填的）' : '') + '</td><td>' + c.shortYears + '</td><td>' + (c.firstShort == null ? '—' : c.firstShort) + '</td><td>' + c.maxShort + '</td><td>' + c.spareYears + '</td></tr>').join('');
+  }
+  function sugList(sg) {
+    const box = $('sugs'); box.innerHTML = '';
+    sg.forEach((x) => {
+      const d = document.createElement('div'); d.className = 'sug';
+      d.innerHTML = '<span>' + esc(x.text) + '</span>';
+      const bt = document.createElement('button'); bt.textContent = '照这样算'; bt.dataset.sug = x.id;
+      bt.addEventListener('click', () => { state = copy(x.apply); selY = null; fill(); run(); });
+      d.appendChild(bt); box.appendChild(d);
+    });
+    $('sugCard').style.display = sg.length ? '' : 'none';
+  }
+  function run() {
+    [].forEach.call(document.querySelectorAll('.bad'), (e) => e.classList.remove('bad'));
+    try {
+      const R = C.calculate(state);
+      const sg = C.suggestions(state, R);
+      $('error').style.display = 'none'; $('out').style.display = ''; $('out2').style.display = '';
+      $('summary').textContent = R.summary;
+      $('facts').innerHTML = R.facts.map((f) => '<li>' + esc(f) + '</li>').join('');
+      last = { r: R, sg };
+      if (selY == null || !R.Y.some((x) => x.y === selY)) selY = defaultYear(R);
+      renderBig(R); renderStrip(R); renderPlan(R); renderCmp(R); sugList(sg);
+    } catch (e) {
+      last = null;
+      if (e.field) { const el = $(e.field); if (el) el.classList.add('bad'); }
+      $('error').textContent = '算不了：' + e.message; $('error').style.display = 'block';
+      $('out').style.display = 'none'; $('out2').style.display = 'none';
+    }
+    save();
+  }
+
+  /* ── 导出 ── */
+  function stamp() { const d = new Date(), z = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes()); }
+  function download(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  function wrap(g, t, w) {
+    const NOHEAD = '，。、；：！？）」』%·→｜';
+    const out = []; let line = [];
+    const toks = String(t).match(/[0-9][0-9,.%–]*(\s?(年|间|岁|个))?|[A-Za-z_][A-Za-z0-9_.\-/]*|[\s\S]/g) || [];
+    const width = (a) => g.measureText(a.join('')).width;
+    for (const tk of toks) {
+      if (line.length && width(line.concat([tk])) > w) {
+        let carry = [tk];
+        while (line.length > 1 && (NOHEAD.indexOf(carry[0][0]) >= 0 || '（「『'.indexOf(line[line.length - 1]) >= 0)) carry.unshift(line.pop());
+        out.push(line.join(''));
+        line = carry; if (/^\s+$/.test(line[0])) line.shift();
+      } else line.push(tk);
+    }
+    if (line.length) out.push(line.join('')); return out;
+  }
+  function fitText(g, t, w) { let s = String(t); if (g.measureText(s).width <= w) return s; while (s.length > 1 && g.measureText(s + '…').width > w) s = s.slice(0, -1); return s + '…'; }
+  function drawPNG(Lx) {
+    const R = Lx.r, P = R.P, x = R.Y.find((v) => v.y === (selY == null ? defaultYear(R) : selY));
+    const Wd = 1080, H = 1350, X = 70, TW = 940;
+    const cv = document.createElement('canvas'); cv.width = Wd; cv.height = H;
+    const g = cv.getContext('2d'), FF = '"PingFang SC","Microsoft YaHei",sans-serif';
+    g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, Wd, H);
+    g.fillStyle = '#fffdf8'; g.fillRect(36, 36, Wd - 72, H - 72);
+    g.fillStyle = '#7a6f63'; g.font = '24px ' + FF;
+    g.fillText(fitText(g, NAME + ' · ' + C.ju(P.rooms) + ' · ' + P.ps.length + ' 个人 · ' + P.from + '–' + R.last + ' 年', TW), X, 98);
+    g.fillStyle = '#2b2620'; g.font = 'bold 32px ' + FF;
+    let y = 152;
+    wrap(g, R.summary, TW).slice(0, 4).forEach((l) => { g.fillText(l, X, y); y += 46; });
+    y += 6;
+    const bw = (TW - 20) / 3, s = R.shortYs;
+    [[s.length ? s[0].y + ' 年' : '都够', s.length ? '从这年开始挤不下' : '每年都够住', s.length ? '#fbe6e0' : '#e6efe3', s.length ? '#a33a26' : '#3d6b34'],
+      [s.length + ' 年', P.span + ' 年里不够住', '#f3eee4', '#2b2620'],
+      [R.minFit + ' 间', '整段都够住至少', '#f3eee4', '#2b2620']].forEach((b, i) => {
+      const bx = X + i * (bw + 10);
+      g.fillStyle = b[2]; g.fillRect(bx, y, bw, 96);
+      g.fillStyle = b[3]; g.font = 'bold 36px ' + FF; g.fillText(b[0], bx + 16, y + 48);
+      g.fillStyle = '#7a6f63'; g.font = '20px ' + FF; g.fillText(fitText(g, b[1], bw - 30), bx + 16, y + 80);
+    });
+    y += 130;
+    /* 年份条 */
+    const n = R.Y.length, cw = Math.min(46, TW / n), ch = 56;
+    R.Y.forEach((v, k) => {
+      const bx = X + k * cw;
+      g.fillStyle = v.short ? '#f2c9bd' : v.spare ? '#dfe9d8' : '#ece5d8'; g.fillRect(bx + 1, y, cw - 2, ch);
+      if (v.y === x.y) { g.strokeStyle = '#2b2620'; g.lineWidth = 3; g.strokeRect(bx + 2, y + 1, cw - 4, ch - 2); }
+      g.fillStyle = v.short ? '#8e2b1c' : '#2b2620'; g.font = 'bold ' + (cw < 34 ? 15 : 20) + 'px ' + FF; g.textAlign = 'center'; g.fillText(String(v.need), bx + cw / 2, y + 26);
+      g.fillStyle = '#7a6f63'; g.font = (cw < 34 ? 12 : 14) + 'px ' + FF; g.fillText(String(v.y % 100).padStart(2, '0'), bx + cw / 2, y + 47); g.textAlign = 'left';
+    });
+    y += ch + 44;
+    g.fillStyle = '#2b2620'; g.font = 'bold 24px ' + FF;
+    g.fillText(fitText(g, x.y + ' 年：家里 ' + x.here.length + ' 人，要 ' + x.need + ' 间，房子 ' + P.rooms + ' 间' + (x.short ? '，差 ' + x.short + ' 间' : x.spare ? '，空 ' + x.spare + ' 间' : '，正好住满'), TW), X, y); y += 16;
+    /* 房间格子 */
+    const cells = x.rooms.map((r, k) => ({ r, out: k >= P.rooms })).concat(Array.from({ length: x.spare }, () => ({ r: { kind: 'spare', people: [] }, out: false })));
+    const cols = 4, gw = (TW - (cols - 1) * 10) / cols, gh = 92;
+    cells.slice(0, 8).forEach((c, k) => {
+      const bx = X + (k % cols) * (gw + 10), by = y + Math.floor(k / cols) * (gh + 10);
+      g.fillStyle = c.out ? '#fff0ec' : c.r.kind === 'spare' || c.r.kind === 'extra' ? '#f1ece2' : '#fffaf0'; g.fillRect(bx, by, gw, gh);
+      g.strokeStyle = c.out ? '#b3412f' : '#5b4a38'; g.lineWidth = 3; g.setLineDash(c.out ? [8, 6] : []); g.strokeRect(bx, by, gw, gh); g.setLineDash([]);
+      const title = c.r.kind === 'spare' ? '空房' : c.r.kind === 'group' ? c.r.label : c.r.kind === 'kids' ? '孩子合住' : c.r.kind === 'kid' ? '孩子单住' : c.r.kind === 'adult' ? '单间' : '书房/客房';
+      g.fillStyle = c.out ? '#a33a26' : '#8b8073'; g.font = '18px ' + FF; g.fillText(fitText(g, title + (c.out ? '（放不下）' : ''), gw - 20), bx + 12, by + 28);
+      g.fillStyle = '#2b2620'; g.font = 'bold 21px ' + FF;
+      const who = c.r.people.map((nm) => nm + ' ' + (x.y - P.ps.find((p) => p.name === nm).birth));
+      wrap(g, who.join('、') || (c.r.kind === 'extra' ? '留着' : ''), gw - 24).slice(0, 2).forEach((l, i) => g.fillText(l, bx + 12, by + 58 + i * 26));
+    });
+    y += Math.ceil(Math.min(8, cells.length) / cols) * (gh + 10) + 26;
+    if (cells.length > 8) { g.fillStyle = '#a33a26'; g.font = '20px ' + FF; g.fillText('还有 ' + (cells.length - 8) + ' 间没画出来，完整见 CSV', X, y - 4); y += 30; }
+    g.font = '21px ' + FF; g.fillStyle = '#2b2620';
+    /* 换成几居 */
+    g.font = 'bold 22px ' + FF; g.fillStyle = '#7a6f63';
+    const cx = [X, X + 300, X + 560, X + TW];
+    g.fillText('居室', cx[0], y); g.textAlign = 'right'; g.fillText('不够住的年数', cx[1], y); g.fillText('第一个不够的年份', cx[2], y); g.fillText('有空房的年数', cx[3], y); g.textAlign = 'left';
+    R.cmp.forEach((c) => {
+      y += 34; g.font = (c.n === P.rooms ? 'bold ' : '') + '22px ' + FF; g.fillStyle = c.shortYears ? '#a33a26' : '#2b2620';
+      g.fillText(C.ju(c.n) + (c.n === P.rooms ? '（你填的）' : ''), cx[0], y); g.textAlign = 'right';
+      g.fillText(String(c.shortYears), cx[1], y); g.fillText(c.firstShort == null ? '—' : String(c.firstShort), cx[2], y); g.fillStyle = '#2b2620'; g.fillText(String(c.spareYears), cx[3], y); g.textAlign = 'left';
+    });
+    y += 46;
+    g.font = '21px ' + FF; g.fillStyle = '#2b2620';
+    const items = [R.facts[0], R.facts[1]].concat(Lx.sg.map((q) => '改一个条件：' + q.text));
+    for (const f of items) {
+      const ls = wrap(g, '· ' + f, TW);
+      if (y + (ls.length - 1) * 30 > H - 130) break;
+      ls.forEach((l) => { g.fillText(l, X, y); y += 30; }); y += 6;
+    }
+    g.fillStyle = '#8b8073'; g.font = '18px ' + FF;
+    wrap(g, '只数卧室间数，按你家自己定的同屋规则逐年排；年龄 = 年份 − 出生年。不看面积、户型和价格；默认例子是虚构的。', TW).forEach((l, i) => g.fillText(l, X, H - 96 + i * 27));
+    return Promise.resolve(cv);
+  }
+  function backup() {
+    const R = last.r;
+    return { app: NAME, version: 1, savedAt: stamp(), input: copy(state), result: { summary: R.summary, firstShort: R.shortYs.length ? R.shortYs[0].y : null, shortYears: R.shortYs.length, minRooms: R.minFit,
+      years: R.Y.map((x) => ({ year: x.y, need: x.need, short: x.short, rooms: x.rooms.map((r) => r.people.length ? r.people.join('+') : r.label) })) } };
+  }
+  function init() {
+    KEYS.forEach((k) => $(k).addEventListener('input', () => { state[k] = $(k).value; selY = null; run(); }));
+    PRESETS.forEach((p) => {
+      const b = document.createElement('button'); b.className = 'ghost'; b.textContent = p[0];
+      b.addEventListener('click', () => { state = copy(p[1]); selY = null; fill(); run(); });
+      $('presets').appendChild(b);
+    });
+    $('reset').addEventListener('click', () => { state = copy(DEFAULT); selY = null; fill(); run(); });
+    $('dlCSV').addEventListener('click', () => { if (last) download(NAME + '.csv', new Blob(['\ufeff' + C.toCSV(last.r, stamp())], { type: 'text/csv;charset=utf-8' })); });
+    $('dlMD').addEventListener('click', () => { if (last) download(NAME + '.md', new Blob([C.toMD(last.r, stamp(), last.sg)], { type: 'text/markdown;charset=utf-8' })); });
+    $('dlJSON').addEventListener('click', () => { if (last) download(NAME + '-备份.json', new Blob([JSON.stringify(backup(), null, 2)], { type: 'application/json' })); });
+    $('dlPNG').addEventListener('click', () => { if (last) drawPNG(last).then((cv) => cv.toBlob((b) => download(NAME + '-1080x1350.png', b), 'image/png')); });
+    state = load() || copy(DEFAULT);
+    fill(); run();
+    window.__ex = { last: () => last, state: () => state, selY: () => selY, presets: PRESETS, DEFAULT, drawPNG };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+  </script>
+</body>
+</html>
